@@ -48,7 +48,11 @@ const I18N = {
     'toast.imgFail': 'That image could not be read.', 'toast.restored': 'Restored your last session.',
     'confirm.title': 'Unsaved changes', 'confirm.discard': 'The presentation has unsaved changes. Discard them?',
     'confirm.ok': 'Discard', 'confirm.cancel': 'Cancel', 'untitled': 'Untitled presentation',
-    'end': 'End of presentation — click or press Esc to leave'
+    'end': 'End of presentation — click or press Esc to leave',
+    'tool.table': 'Table', 'a.exportPptx': 'Export as PowerPoint (.pptx)…', 'a.presenter': 'Presenter View', 'f.addTable': 'Insert a table',
+    'o.header': 'Header row', 'o.row': 'Row', 'o.col': 'Column', 'o.headerColor': 'Header',
+    'p.current': 'Current slide', 'p.next': 'Next', 'p.notes': 'Notes', 'p.noNotes': 'No notes for this slide.', 'p.end': 'End of presentation',
+    'p.waiting': 'Waiting for the presentation… start it with F5 in the main window.', 'p.reset': 'Reset timer', 'p.hint': 'Press P during the presentation to open the presenter view.'
   },
   de: {
     'menu.file': 'Datei', 'menu.edit': 'Bearbeiten', 'menu.slide': 'Folie', 'menu.view': 'Ansicht', 'menu.settings': 'Einstellungen',
@@ -82,7 +86,11 @@ const I18N = {
     'toast.imgFail': 'Dieses Bild konnte nicht gelesen werden.', 'toast.restored': 'Letzte Sitzung wiederhergestellt.',
     'confirm.title': 'Ungespeicherte Änderungen', 'confirm.discard': 'Die Präsentation hat ungespeicherte Änderungen. Verwerfen?',
     'confirm.ok': 'Verwerfen', 'confirm.cancel': 'Abbrechen', 'untitled': 'Unbenannte Präsentation',
-    'end': 'Ende der Präsentation — Klick oder Esc zum Beenden'
+    'end': 'Ende der Präsentation — Klick oder Esc zum Beenden',
+    'tool.table': 'Tabelle', 'a.exportPptx': 'Als PowerPoint (.pptx) exportieren…', 'a.presenter': 'Referentenansicht', 'f.addTable': 'Tabelle einfügen',
+    'o.header': 'Kopfzeile', 'o.row': 'Zeile', 'o.col': 'Spalte', 'o.headerColor': 'Kopf',
+    'p.current': 'Aktuelle Folie', 'p.next': 'Nächste', 'p.notes': 'Notizen', 'p.noNotes': 'Keine Notizen zu dieser Folie.', 'p.end': 'Ende der Präsentation',
+    'p.waiting': 'Warte auf die Präsentation… starte sie mit F5 im Hauptfenster.', 'p.reset': 'Timer zurücksetzen', 'p.hint': 'Drücke P während der Präsentation für die Referentenansicht.'
   }
 };
 let lang = store.get('lang', (navigator.language || 'en').toLowerCase().startsWith('de') ? 'de' : 'en');
@@ -112,7 +120,10 @@ const TRANSITIONS = ['none', 'fade', 'slide', 'zoom'];
 const newEl = (type, p) => Object.assign({id: uid(), type, x: 100, y: 100, w: 400, h: 200, rot: 0, op: 1}, p);
 const textEl = (p) => newEl('text', Object.assign({text: '', size: 48, color: 't:text', font: 't:body', bold: false, italic: false, underline: false, align: 'left', w: 700}, p));
 const shapeEl = (shape, p) => newEl('shape', Object.assign({shape, fill: 't:accent', stroke: null, sw: 0, radius: 24, w: 300, h: 300}, p));
-const imageEl = (src, w, h, p) => { const k = Math.min(1, 1100 / w, 700 / h); return newEl('image', Object.assign({src, fit: 'contain', w: Math.round(w * k), h: Math.round(h * k), x: Math.round((W - w * k) / 2), y: Math.round((H - h * k) / 2)}, p)); };
+const imageEl = (src, w, h, p) => { const k = Math.min(1, 1100 / w, 700 / h); return newEl('image', Object.assign({src, fit: 'contain', iw: w, ih: h, w: Math.round(w * k), h: Math.round(h * k), x: Math.round((W - w * k) / 2), y: Math.round((H - h * k) / 2)}, p)); };
+const tableEl = (rows, cols, p) => newEl('table', Object.assign({cells: Array.from({length: rows}, (_, r) => Array.from({length: cols}, () => '')),
+  hdr: true, size: 32, color: 't:text', fill: 't:accent', w: Math.min(1600, cols * 300), x: Math.round((W - Math.min(1600, cols * 300)) / 2), y: 260}, p));
+const AUTO_H = new Set(['text', 'table']);              // height follows the content
 const newSlide = (els = []) => ({id: uid(), bg: 't:bg', els, trans: 'fade', notes: ''});
 
 function layout(kind) {
@@ -215,6 +226,20 @@ function elNode(e, th, hideEmpty) {
       fontStyle: e.italic ? 'italic' : 'normal', textDecoration: e.underline ? 'underline' : 'none', textAlign: e.align || 'left'});
   } else if (e.type === 'shape') {
     n.style.height = e.h + 'px'; n.innerHTML = shapeSvg(e, th);
+  } else if (e.type === 'table') {
+    const tb = el('table', {className: 'tbl'});
+    Object.assign(tb.style, {fontSize: e.size + 'px', color: color(e.color, th), fontFamily: fontOf('t:body', th)});
+    e.cells.forEach((row, r) => {
+      const tr = el('tr');
+      row.forEach((c, ci) => {
+        const head = e.hdr && r === 0, td = el(head ? 'th' : 'td', {textContent: c});
+        td.dataset.r = r; td.dataset.c = ci;
+        if (head) { td.style.background = color(e.fill, th); td.style.color = '#fff'; } else if (r % 2 === 0) td.style.background = 'rgba(0,0,0,.035)';
+        tr.append(td);
+      });
+      tb.append(tr);
+    });
+    n.append(tb);
   } else if (e.type === 'image') {
     n.style.height = e.h + 'px';
     n.style.backgroundImage = `url("${e.src}")`;
@@ -244,7 +269,7 @@ function renderStage() {
   renderOverlay();
 }
 function nodeOf(id) { return stage.querySelector(`.el[data-id="${id}"]`); }
-function boxOf(e) { const n = nodeOf(e.id); return {x: e.x, y: e.y, w: e.w, h: e.type === 'text' ? (n ? n.offsetHeight : e.size * 1.2) : e.h}; }
+function boxOf(e) { const n = AUTO_H.has(e.type) && nodeOf(e.id); return {x: e.x, y: e.y, w: e.w, h: AUTO_H.has(e.type) ? (n ? n.offsetHeight : e.size * 1.2) : e.h}; }
 
 const HANDLES = [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
 function renderOverlay() {
@@ -254,7 +279,7 @@ function renderOverlay() {
     box.style.cssText = `left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px;transform:rotate(${e.rot || 0}deg)`;
     if (sel.length === 1 && !editing) {
       for (const [hx, hy] of HANDLES) {
-        if (e.type === 'text' && hy !== 0 && hx === 0) continue;       // text height is automatic
+        if (AUTO_H.has(e.type) && hy !== 0 && hx === 0) continue;       // text/table height is automatic
         const h = el('div', {className: 'handle' + (hx === 0 ? ' edge-v' : hy === 0 ? ' edge-h' : '')});
         h.style.cssText = `left:${(hx + 1) * 50}%;top:${(hy + 1) * 50}%;cursor:${cursorFor(hx, hy, e.rot)}`;
         h.dataset.hx = hx; h.dataset.hy = hy;
@@ -273,7 +298,7 @@ function cursorFor(hx, hy, rot = 0) {
 }
 
 /* Pointer interaction: move, resize, rotate, marquee-less click select. */
-let drag = null, editing = null, guides = [], lastDownEl = null;
+let drag = null, editing = null, guides = [], lastDownEl = null, lastDownCell = null;
 const toLogical = ev => { const r = stage.getBoundingClientRect(); return {x: (ev.clientX - r.left) / scale, y: (ev.clientY - r.top) / scale}; };
 
 wrap.addEventListener('pointerdown', ev => {
@@ -289,6 +314,8 @@ wrap.addEventListener('pointerdown', ev => {
   }
   const target = ev.target.closest && ev.target.closest('.el');
   lastDownEl = target && stage.contains(target) ? target.dataset.id : null;
+  const cell = ev.target.closest && ev.target.closest('td,th');
+  lastDownCell = cell && lastDownEl ? [+cell.dataset.r, +cell.dataset.c] : null;
   if (target && stage.contains(target)) {
     const id = target.dataset.id;
     if (ev.shiftKey) sel = sel.includes(id) ? sel.filter(x => x !== id) : [...sel, id];
@@ -334,17 +361,17 @@ wrap.addEventListener('pointermove', ev => {
     const lx = dx * Math.cos(rot) + dy * Math.sin(rot), ly = -dx * Math.sin(rot) + dy * Math.cos(rot);
     let w = start.w, h = start.h;
     if (hx) w = Math.max(30, start.w + hx * lx);
-    if (hy && e.type !== 'text') h = Math.max(30, start.h + hy * ly);
-    if (hx && hy && (e.type === 'text' || e.type === 'image' || ev.shiftKey)) {          // corners keep the proportions
+    if (hy && !AUTO_H.has(e.type)) h = Math.max(30, start.h + hy * ly);
+    if (hx && hy && (AUTO_H.has(e.type) || e.type === 'image' || ev.shiftKey)) {          // corners keep the proportions
       const k = Math.max(w / start.w, h / start.h); w = Math.max(30, start.w * k); h = Math.max(30, start.h * k);
     }
-    if (e.type === 'text' && hx && hy) e.size = Math.max(8, Math.round(drag.size * w / start.w));
+    if (AUTO_H.has(e.type) && hx && hy) e.size = Math.max(8, Math.round(drag.size * w / start.w));
     const dw = w - start.w, dh = h - start.h;
     const sx = hx * dw / 2, sy = hy * dh / 2;
     const cx = start.x + start.w / 2 + sx * Math.cos(rot) - sy * Math.sin(rot);
     const cy = start.y + start.h / 2 + sx * Math.sin(rot) + sy * Math.cos(rot);
-    e.w = Math.round(w); if (e.type !== 'text') e.h = Math.round(h);
-    e.x = Math.round(cx - e.w / 2); e.y = Math.round(cy - (e.type === 'text' ? start.h : e.h) / 2);
+    e.w = Math.round(w); if (!AUTO_H.has(e.type)) e.h = Math.round(h);
+    e.x = Math.round(cx - e.w / 2); e.y = Math.round(cy - (AUTO_H.has(e.type) ? start.h : e.h) / 2);
     const n = nodeOf(e.id);
     if (n) { const fresh = elNode(e, themeOf()); n.replaceWith(fresh); }
     renderOverlay();
@@ -365,26 +392,38 @@ function drawGuides() {
 wrap.addEventListener('dblclick', () => {
   const e = lastDownEl && byId(lastDownEl);
   if (e && e.type === 'text') startEdit(e);
+  else if (e && e.type === 'table' && lastDownCell) startEdit(e, lastDownCell);
 });
-function startEdit(e) {
+function startEdit(e, cell) {
   if (!e) return;
   finishEdit();
-  sel = [e.id]; const node = nodeOf(e.id); if (!node) return;
+  sel = [e.id]; const elNodeEl = nodeOf(e.id); if (!elNodeEl) return;
+  const node = cell ? elNodeEl.querySelector(`[data-r="${cell[0]}"][data-c="${cell[1]}"]`) : elNodeEl;
+  if (!node) return;
   node.classList.add('editing'); node.contentEditable = 'plaintext-only';
   if (node.contentEditable !== 'plaintext-only') node.contentEditable = 'true';
   if (e.ph) node.textContent = '';
-  editing = {e, node}; renderOverlay();
+  editing = {e, node, cell}; renderOverlay();
   node.focus();
   const r = document.createRange(); r.selectNodeContents(node); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
   node.addEventListener('input', () => { overlayFollow(); });
-  node.addEventListener('keydown', k => { if (k.key === 'Escape') { k.preventDefault(); finishEdit(); } k.stopPropagation(); });
+  node.addEventListener('keydown', k => {
+    if (k.key === 'Escape') { k.preventDefault(); finishEdit(); }
+    else if (k.key === 'Tab' && cell) {                       // Tab / Shift+Tab walk through the table cells
+      k.preventDefault();
+      const cols = e.cells[0].length, n = e.cells.length * cols, i = (cell[0] * cols + cell[1] + (k.shiftKey ? -1 : 1) + n) % n;
+      finishEdit(); startEdit(e, [Math.floor(i / cols), i % cols]);
+    }
+    k.stopPropagation();
+  });
 }
-function overlayFollow() { if (editing) { const n = editing.node, box = overlay.querySelector('.sel'); if (box) box.style.height = n.offsetHeight + 'px'; } }
+function overlayFollow() { if (editing) { const n = editing.cell ? nodeOf(editing.e.id) : editing.node, box = overlay.querySelector('.sel'); if (box) box.style.height = n.offsetHeight + 'px'; } }
 function finishEdit() {
   if (!editing) return;
-  const {e, node} = editing; editing = null;
+  const {e, node, cell} = editing; editing = null;
   const txt = node.innerText.replace(/\n$/, '');
   node.contentEditable = 'false'; node.classList.remove('editing');
+  if (cell) { e.cells[cell[0]][cell[1]] = txt; getSelection().removeAllRanges(); commit(); renderAll(); return; }
   if (txt.trim() === '' && e.ph) { /* untouched placeholder keeps its hint */ } else if (txt !== e.text || e.ph) { e.text = txt; e.ph = false; }
   if (!e.ph && e.text.trim() === '') { slide().els = slide().els.filter(x => x !== e); sel = []; }
   getSelection().removeAllRanges();
@@ -402,6 +441,20 @@ function addText(kind) {
 function addShape(kind) {
   const p = kind === 'line' ? {w: 600, h: 24, fill: 't:text', sw: 10, x: 660, y: 528} : {x: 810, y: 390, w: 300, h: 300};
   addEl(shapeEl(kind, p));
+}
+function addTable(rows, cols) {
+  const e = tableEl(rows, cols);
+  if (rows > 1) e.cells[0] = e.cells[0].map((_, i) => (lang === 'de' ? 'Spalte ' : 'Column ') + (i + 1));
+  addEl(e);
+}
+function tableOp(op) {
+  const e = selEls()[0]; if (!e || e.type !== 'table') return;
+  const rows = e.cells.length, cols = e.cells[0].length;
+  if (op === 'addRow') e.cells.push(Array(cols).fill(''));
+  if (op === 'delRow' && rows > 1) e.cells.pop();
+  if (op === 'addCol') { e.cells.forEach(r => r.push('')); e.w = Math.min(W - e.x, Math.round(e.w * (cols + 1) / cols)); }
+  if (op === 'delCol' && cols > 1) { e.cells.forEach(r => r.pop()); e.w = Math.round(e.w * (cols - 1) / cols); }
+  commit(); renderAll();
 }
 function del() { if (!sel.length) return; slide().els = slide().els.filter(e => !sel.includes(e.id)); sel = []; commit(); renderAll(); }
 function dup() {
@@ -510,6 +563,13 @@ function renderOptbar() {
       colorPicker(t('o.stroke'), e.stroke, v => { setProp('stroke', v); if (v && !e.sw) setProp('sw', 6); }, true),
       numberField(t('o.width'), e.sw || 0, 0, 80, v => setProp('sw', v)));
     if (e.shape === 'rect' || e.shape === 'round') bar.append(numberField(t('o.radius'), e.radius ?? 0, 0, 400, v => setProp('radius', v)));
+  } else if (e.type === 'table') {
+    bar.append(numberField(t('o.size'), e.size, 8, 200, v => setProp('size', v)), sepEl(),
+      colorPicker(t('o.color'), e.color, v => setProp('color', v)), sepEl(),
+      colorPicker(t('o.headerColor'), e.fill, v => setProp('fill', v)), sepEl(),
+      group(btn(t('o.header'), () => setProp('hdr', !e.hdr), {on: e.hdr}),
+        el('label', {textContent: t('o.row')}), btn('+', () => tableOp('addRow')), btn('−', () => tableOp('delRow')),
+        el('label', {textContent: t('o.col')}), btn('+', () => tableOp('addCol')), btn('−', () => tableOp('delCol'))));
   } else if (e.type === 'image') {
     const fit = el('select'); for (const f of ['contain', 'cover', 'stretch']) fit.append(el('option', {value: f, textContent: t('o.' + f), selected: e.fit === f}));
     fit.onchange = () => setProp('fit', fit.value);
@@ -540,6 +600,7 @@ const TOOLS = [
   ['templates', 'tool.templates', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M10 10v10"/></svg>'],
   ['text', 'tool.text', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg>'],
   ['shapes', 'tool.shapes', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="9" height="9" rx="1"/><circle cx="16" cy="8" r="5"/></svg>'],
+  ['table', 'tool.table', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14.5h18M9 4v16M15 4v16"/></svg>'],
   ['images', 'tool.images', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>'],
   ['themes', 'tool.themes', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.4"/><circle cx="12" cy="7" r="1.4"/><circle cx="16" cy="10" r="1.4"/></svg>'],
   ['notes', 'tool.notes', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"/></svg>']
@@ -579,6 +640,16 @@ function renderPanels() {
       b.onclick = () => addShape(k); g.append(b);
     }
     f.append(g);
+  } else if (tool === 'table') {
+    // Hover grid like in office apps: pick rows × columns with one click.
+    f.append(el('h3', {textContent: t('f.addTable')}));
+    const label = el('div', {className: 'tgrid-label', textContent: '3 × 3'}), grid = el('div', {className: 'tgrid'});
+    const mark = (r, c) => { grid.querySelectorAll('span').forEach(x => x.classList.toggle('on', +x.dataset.r <= r && +x.dataset.c <= c)); label.textContent = `${r} × ${c}`; };
+    for (let r = 1; r <= 8; r++) for (let c = 1; c <= 8; c++) {
+      const cell = el('span'); cell.dataset.r = r; cell.dataset.c = c;
+      cell.onmouseenter = () => mark(r, c); cell.onclick = () => addTable(r, c); grid.append(cell);
+    }
+    f.append(grid, label); mark(3, 3);
   } else if (tool === 'images') {
     f.append(el('h3', {textContent: t('tool.images')}), btn(t('f.addImage'), () => pickImages(addImage), {}));
     f.lastChild.className = 'primary big';
@@ -667,12 +738,13 @@ function pickImages(cb) {
   inp.click();
 }
 document.addEventListener('paste', async ev => {
-  if (editing) return;
+  if (editing || IS_PRESENTER) return;
   const files = [...(ev.clipboardData ? ev.clipboardData.files : [])];
   if (files.length) { ev.preventDefault(); addImages(files); }
 });
 document.addEventListener('dragover', ev => { if (ev.dataTransfer && [...ev.dataTransfer.types].includes('Files')) ev.preventDefault(); });
 document.addEventListener('drop', ev => {
+  if (IS_PRESENTER) return;
   if (ev.dataTransfer && ev.dataTransfer.files.length) { ev.preventDefault(); addImages([...ev.dataTransfer.files]); }
 });
 
@@ -747,6 +819,52 @@ async function doExportHtml() {
     } else { downloadBlob(new Blob([html], {type: 'text/html'}), name); }
   } catch (e) { toast(t('toast.saveFail', {e})); }
 }
+/* Heights of auto-height elements, measured off-screen exactly as the slide is drawn. */
+function measureHeights() {
+  const box = el('div'); box.style.cssText = `position:fixed;left:-99999px;top:0;width:${W}px;height:${H}px;visibility:hidden`;
+  document.body.append(box);
+  const out = {}, th = themeOf();
+  for (const s of doc.slides) {
+    box.replaceChildren(slideNode(s, th));
+    for (const e of s.els) if (AUTO_H.has(e.type)) { const n = box.querySelector(`.el[data-id="${e.id}"]`); if (n) out[e.id] = n.offsetHeight; }
+  }
+  box.remove();
+  return out;
+}
+/* Pictures as PNG/JPEG bytes (PowerPoint can't read WebP etc., so those are redrawn as PNG). */
+async function imageBytes() {
+  const out = {};
+  for (const s of doc.slides) for (const e of s.els) if (e.type === 'image' && e.src && !out[e.id]) {
+    const m = /^data:image\/(png|jpe?g);base64,(.*)$/i.exec(e.src);
+    let bytes, ext, w = e.iw, h = e.ih;
+    if (m) { ext = /png/i.test(m[1]) ? 'png' : 'jpeg'; bytes = Uint8Array.from(atob(m[2]), ch => ch.charCodeAt(0)); }
+    if (!bytes || !w || !h) {
+      const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = e.src; }).catch(() => null);
+      if (!img) continue;
+      w = img.naturalWidth; h = img.naturalHeight;
+      if (!bytes) {
+        const c = el('canvas', {width: w, height: h}); c.getContext('2d').drawImage(img, 0, 0);
+        const b = await new Promise(r => c.toBlob(r, 'image/png')); bytes = new Uint8Array(await b.arrayBuffer()); ext = 'png';
+      }
+    }
+    out[e.id] = {ext, bytes, w, h};
+  }
+  return out;
+}
+async function buildPptx() {
+  if (editing) finishEdit();
+  return PptxExport.build({doc, theme: themeOf(), color, heights: measureHeights(), images: await imageBytes()});
+}
+async function doExportPptx() {
+  const name = (file.name || fileTitle()).replace(/\.slides$/i, '') + '.pptx';
+  try {
+    const bytes = await buildPptx();
+    if (invoke) {
+      const p = await invoke('save_bytes', {suggestedName: name, filterName: 'PowerPoint', extensions: ['pptx'], bytes: Array.from(bytes)});
+      if (p) toast(t('toast.exported', {path: p}));
+    } else downloadBlob(new Blob([bytes], {type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'}), name);
+  } catch (e) { toast(t('toast.saveFail', {e})); }
+}
 function doExportPdf() {
   const root = $('#printroot'), th = themeOf(); root.replaceChildren();
   for (const s of doc.slides) { const p = el('div', {className: 'pslide'}); p.append(slideNode(s, th, true)); root.append(p); }
@@ -771,6 +889,7 @@ function presShow(i, animate = true) {
   $('#pbar').style.width = ((pi + 1) / doc.slides.length * 100) + '%';
   $('#pnum').textContent = `${pi + 1} / ${doc.slides.length}`;
   pres.classList.remove('blank');
+  presState();
 }
 function present(from = 0) {
   if (editing) finishEdit();
@@ -778,7 +897,7 @@ function present(from = 0) {
   const d = document.documentElement; if (d.requestFullscreen) d.requestFullscreen().catch(() => {});
 }
 function endPresent() {
-  if (!presenting) return; presenting = false; pres.classList.remove('on');
+  if (!presenting) return; presenting = false; pres.classList.remove('on'); presState();
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   go(pi);
 }
@@ -786,21 +905,90 @@ const pNext = () => { if (pi < doc.slides.length - 1) presShow(pi + 1); else end
 const pPrev = () => presShow(pi - 1);
 $('#pNext').onclick = e => { e.stopPropagation(); pNext(); };
 $('#pPrev').onclick = e => { e.stopPropagation(); pPrev(); };
-$('#pBlank').onclick = e => { e.stopPropagation(); pres.classList.toggle('blank'); };
+$('#pBlank').onclick = e => { e.stopPropagation(); pres.classList.toggle('blank'); presState(); };
 $('#pExit').onclick = e => { e.stopPropagation(); endPresent(); };
 pres.addEventListener('click', ev => { if (ev.target.closest('.pctl')) return; (ev.clientX < innerWidth / 5) ? pPrev() : pNext(); });
-document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && presenting) { presenting = false; pres.classList.remove('on'); go(pi); } });
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && presenting) { presenting = false; pres.classList.remove('on'); presState(); go(pi); } });
+
+/* ───────────── presenter view ─────────────
+   A second window (index.html#presenter) shows the current and next slide, the notes and a timer. Both windows talk
+   over a BroadcastChannel: the presenter asks for the deck ("hello"), the main window sends it and every slide change,
+   the presenter sends navigation commands back. */
+const chan = 'BroadcastChannel' in window ? new BroadcastChannel('slides-studio-presenter') : null;
+const IS_PRESENTER = location.hash === '#presenter';
+function presState() { if (chan && !IS_PRESENTER) chan.postMessage({type: 'state', i: pi, presenting, blank: pres.classList.contains('blank')}); }
+if (chan && !IS_PRESENTER) chan.onmessage = ({data: m}) => {
+  if (m.type === 'hello') { chan.postMessage({type: 'doc', doc}); presState(); }
+  else if (m.type === 'cmd' && presenting) {
+    if (m.a === 'next') pNext(); else if (m.a === 'prev') pPrev(); else if (m.a === 'goto') presShow(m.i);
+    else if (m.a === 'blank') { pres.classList.toggle('blank'); presState(); } else if (m.a === 'exit') endPresent();
+  }
+};
+async function openPresenter() {
+  const T = window.__TAURI__;
+  if (T && T.webviewWindow) {
+    try {
+      const W2 = T.webviewWindow.WebviewWindow, old = await W2.getByLabel('presenter');
+      if (old) { await old.setFocus(); return; }
+      new W2('presenter', {url: 'index.html#presenter', title: t('a.presenter') + ' — Slides Studio', width: 1200, height: 760});
+    } catch (e) { toast(String(e)); }
+  } else if (!window.open('index.html#presenter', 'slides-presenter', 'width=1200,height=760')) toast(t('p.hint'));
+}
+function runPresenter() {
+  document.body.className = 'presenter';
+  document.body.replaceChildren();
+  const root = el('div', {className: 'pv-root'});
+  const timer = el('span', {className: 'pv-timer', textContent: '00:00'}), count = el('span', {className: 'pv-count'});
+  const curBox = el('div', {className: 'pv-cur'}), nextBox = el('div', {className: 'pv-next'}), notes = el('div', {className: 'pv-notes'});
+  const send = (a, extra) => chan && chan.postMessage(Object.assign({type: 'cmd', a}, extra));
+  const head = el('div', {className: 'pv-head'}, timer, btn('↺', () => { start = Date.now(); }, {title: t('p.reset')}), el('div', {className: 'grow'}), count,
+    el('div', {className: 'grow'}), btn('←', () => send('prev')), btn('→', () => send('next')), btn('B', () => send('blank')), btn('✕', () => send('exit')));
+  root.append(head, el('div', {className: 'pv-body'},
+    el('div', {className: 'pv-left'}, el('h4', {textContent: t('p.current')}), curBox),
+    el('div', {className: 'pv-right'}, el('h4', {textContent: t('p.next')}), nextBox, el('h4', {textContent: t('p.notes')}), notes)));
+  document.body.append(root);
+  let deck = null, state = null, start = 0;
+  const put = (box, s) => {
+    box.replaceChildren();
+    if (!s) { box.append(el('div', {className: 'pv-empty', textContent: t('p.end')})); return; }
+    const inner = slideNode(s, THEMES[deck.theme] || THEMES.studio, true);
+    inner.style.cssText = `position:absolute;left:0;top:0;width:${W}px;height:${H}px;transform-origin:0 0;overflow:hidden`;
+    box.append(inner); inner.style.transform = `scale(${box.clientWidth / W})`;
+  };
+  const draw = () => {
+    if (!deck || !state) { curBox.replaceChildren(el('div', {className: 'pv-empty', textContent: t('p.waiting')})); return; }
+    put(curBox, deck.slides[state.i]); put(nextBox, deck.slides[state.i + 1]);
+    curBox.classList.toggle('blank', !!state.blank);
+    notes.textContent = deck.slides[state.i].notes || t('p.noNotes');
+    notes.classList.toggle('muted', !deck.slides[state.i].notes);
+    count.textContent = `${state.i + 1} / ${deck.slides.length}`;
+  };
+  chan.onmessage = ({data: m}) => {
+    if (m.type === 'doc') { deck = m.doc; draw(); }
+    else if (m.type === 'state') { if (m.presenting && !start) start = Date.now(); state = m.presenting ? m : null; draw(); }
+  };
+  setInterval(() => { if (!start) return; const s = Math.floor((Date.now() - start) / 1000); timer.textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }, 500);
+  addEventListener('resize', draw);
+  addEventListener('keydown', ev => {
+    if (/^(ArrowRight|ArrowDown|PageDown| |Enter)$/.test(ev.key)) { ev.preventDefault(); send('next'); }
+    else if (/^(ArrowLeft|ArrowUp|PageUp|Backspace)$/.test(ev.key)) { ev.preventDefault(); send('prev'); }
+    else if (ev.key.toLowerCase() === 'b') send('blank'); else if (ev.key === 'Escape') send('exit');
+  });
+  document.title = t('a.presenter') + ' — Slides Studio';
+  draw(); chan.postMessage({type: 'hello'});
+}
 
 /* ───────────── menus ───────────── */
 const MENUS = () => ({
   file: [[t('a.new'), doNew, 'Ctrl+N'], [t('a.open'), doOpen, 'Ctrl+O'], null, [t('a.save'), () => doSave(false), 'Ctrl+S'], [t('a.saveAs'), () => doSave(true), 'Ctrl+Shift+S'],
-    null, [t('a.exportPdf'), doExportPdf, 'Ctrl+P'], [t('a.exportHtml'), doExportHtml]],
+    null, [t('a.exportPdf'), doExportPdf, 'Ctrl+P'], [t('a.exportPptx'), doExportPptx], [t('a.exportHtml'), doExportHtml]],
   edit: [[t('a.undo'), undo, 'Ctrl+Z'], [t('a.redo'), redo, 'Ctrl+Y'], null, [t('a.cut'), () => { copy(); del(); }, 'Ctrl+X'], [t('a.copy'), copy, 'Ctrl+C'],
     [t('a.paste'), paste, 'Ctrl+V'], [t('a.duplicate'), dup, 'Ctrl+D'], [t('a.delete'), del, 'Del'], [t('a.selectAll'), () => { sel = slide().els.map(e => e.id); renderOverlay(); }, 'Ctrl+A'],
     null, [t('a.front'), () => order('front')], [t('a.forward'), () => order('forward'), 'Ctrl+]'], [t('a.backward'), () => order('backward'), 'Ctrl+['], [t('a.back'), () => order('back')]],
   slide: [[t('a.newSlide'), () => addSlide('content'), 'Ctrl+M'], [t('a.dupSlide'), dupSlide], [t('a.delSlide'), delSlide], null,
     [t('a.slideLeft'), () => moveSlide(cur, cur - 1)], [t('a.slideRight'), () => moveSlide(cur, cur + 1)], null,
-    [t('a.fromStart'), () => present(0), 'F5'], [t('a.fromCurrent'), () => present(cur), 'Shift+F5']],
+    [t('a.fromStart'), () => present(0), 'F5'], [t('a.fromCurrent'), () => present(cur), 'Shift+F5'],
+    [t('a.presenter'), () => { openPresenter(); present(cur); }, 'Alt+F5']],
   view: [[(settings.snap ? '✓ ' : '') + t('a.snap'), () => { settings.snap = !settings.snap; saveSettings(); }]],
   settings: [[t('a.theme') + ': ' + (settings.ui === 'dark' ? '☾ → ☀' : '☀ → ☾'), () => { settings.ui = settings.ui === 'dark' ? 'light' : 'dark'; applyUi(); saveSettings(); }],
     [t('a.language') + ': ' + (lang === 'de' ? 'Deutsch → English' : 'English → Deutsch'), () => { lang = lang === 'de' ? 'en' : 'de'; store.set('lang', lang); applyLang(); renderAll(); }],
@@ -849,12 +1037,14 @@ Native.setHandler(id => ({
 
 /* ───────────── keyboard ───────────── */
 document.addEventListener('keydown', ev => {
+  if (IS_PRESENTER) return;                                   // the presenter window has its own keys
   const ctrl = ev.ctrlKey || ev.metaKey, k = ev.key;
   if (presenting) {
     if (/^(ArrowRight|ArrowDown|PageDown| |Enter)$/.test(k)) { ev.preventDefault(); pNext(); }
     else if (/^(ArrowLeft|ArrowUp|PageUp|Backspace)$/.test(k)) { ev.preventDefault(); pPrev(); }
     else if (k === 'Home') presShow(0); else if (k === 'End') presShow(doc.slides.length - 1);
-    else if (k === 'Escape') endPresent(); else if (k.toLowerCase() === 'b' || k === '.') pres.classList.toggle('blank');
+    else if (k === 'Escape') endPresent(); else if (k.toLowerCase() === 'b' || k === '.') { pres.classList.toggle('blank'); presState(); }
+    else if (k.toLowerCase() === 'p') openPresenter();
     return;
   }
   const inField = ev.target && (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA' || ev.target.tagName === 'SELECT' || ev.target.isContentEditable);
@@ -862,7 +1052,7 @@ document.addEventListener('keydown', ev => {
   if (ctrl && k.toLowerCase() === 'o') { ev.preventDefault(); doOpen(); return; }
   if (ctrl && k.toLowerCase() === 'n') { ev.preventDefault(); doNew(); return; }
   if (ctrl && k.toLowerCase() === 'p') { ev.preventDefault(); doExportPdf(); return; }
-  if (k === 'F5') { ev.preventDefault(); present(ev.shiftKey ? cur : 0); return; }
+  if (k === 'F5') { ev.preventDefault(); if (ev.altKey) openPresenter(); present(ev.shiftKey || ev.altKey ? cur : 0); return; }
   if (inField) return;
   if (ctrl && k.toLowerCase() === 'z') { ev.preventDefault(); ev.shiftKey ? redo() : undo(); }
   else if (ctrl && k.toLowerCase() === 'y') { ev.preventDefault(); redo(); }
@@ -901,6 +1091,7 @@ window.addEventListener('resize', () => { fit(); if (presenting) presFit(); });
 new ResizeObserver(fit).observe(wrap);
 
 function init() {
+  if (IS_PRESENTER) { if (chan) runPresenter(); return; }
   doc = newDoc();
   let restored = false;
   try { const a = JSON.parse(localStorage.getItem('slides.autosave') || 'null'); if (a && a.doc && a.doc.slides && a.doc.slides.length) { doc = a.doc; file = a.file || file; restored = true; } } catch (e) {}
@@ -913,6 +1104,6 @@ function init() {
   window.addEventListener('beforeunload', e => { if (dirty && !invoke) { e.preventDefault(); e.returnValue = ''; } });
 }
 // Test hook (also handy for scripting): the editor state is not exposed in release use beyond this read-only view.
-window.__slides = {get doc() { return doc; }, get sel() { return sel; }, get cur() { return cur; }, addSlide, addShape, addText, present, exportHtml};
+window.__slides = {get doc() { return doc; }, get sel() { return sel; }, get cur() { return cur; }, addSlide, addShape, addText, addTable, present, exportHtml, buildPptx, startEdit};
 init();
 })();

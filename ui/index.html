@@ -120,6 +120,33 @@ input[type=color]{width:28px;height:26px;padding:0;border:1px solid var(--border
 @keyframes t-slide{from{transform:translateX(var(--w)) scale(var(--s))}to{transform:translateX(0) scale(var(--s))}}
 @keyframes t-zoom{from{opacity:0;transform:scale(calc(var(--s)*.85))}to{opacity:1;transform:scale(var(--s))}}
 
+/* Tables */
+.tbl{border-collapse:collapse;width:100%;table-layout:fixed}
+.tbl td,.tbl th{border:1px solid rgba(127,127,127,.45);padding:.35em .55em;text-align:left;vertical-align:middle;white-space:pre-wrap;overflow-wrap:break-word;line-height:1.25;font-weight:400}
+.tbl th{font-weight:700}
+.tbl .editing{outline:3px solid var(--sel);outline-offset:-3px;cursor:text;user-select:text;-webkit-user-select:text}
+.tgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-bottom:8px}
+.tgrid span{aspect-ratio:1;border:1px solid var(--border);border-radius:3px;background:var(--chrome2);cursor:pointer}
+.tgrid span.on{background:var(--accent);border-color:var(--accent)}
+.tgrid-label{text-align:center;color:var(--muted)}
+
+/* Presenter view (second window) */
+body.presenter{display:block;background:#111;color:#eee}
+.pv-root{display:flex;flex-direction:column;height:100vh}
+.pv-head{display:flex;align-items:center;gap:6px;padding:8px 14px;background:#1d1d1d;border-bottom:1px solid #000}
+.pv-head button{color:#eee;font-size:15px}
+.pv-timer{font:600 28px var(--font-ui);font-variant-numeric:tabular-nums}
+.pv-count{font-size:16px;color:#aaa}
+.pv-body{flex:1;display:grid;grid-template-columns:3fr 2fr;gap:16px;padding:16px;min-height:0}
+.pv-left,.pv-right{display:flex;flex-direction:column;min-height:0}
+.pv-body h4{margin:0 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#888}
+.pv-cur,.pv-next{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:#000;border-radius:6px;flex:none}
+.pv-next{margin-bottom:16px}
+.pv-cur.blank>*{visibility:hidden}
+.pv-notes{flex:1;overflow:auto;font-size:20px;line-height:1.45;white-space:pre-wrap;background:#1a1a1a;border-radius:6px;padding:14px;user-select:text}
+.pv-notes.muted{color:#777;font-style:italic}
+.pv-empty{position:absolute;inset:0;display:grid;place-items:center;color:#888;padding:20px;text-align:center}
+
 /* Print: one slide per page */
 #printroot{display:none}
 @media print{
@@ -170,6 +197,7 @@ input[type=color]{width:28px;height:26px;padding:0;border:1px solid var(--border
 <input type="file" id="fileDoc" accept=".slides,.json,application/json" hidden>
 <script src="native.js"></script>
 <script src="autohide.js"></script>
+<script src="pptx.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

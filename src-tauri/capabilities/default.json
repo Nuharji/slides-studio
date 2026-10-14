@@ -1,7 +1,16 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permissions for the main window",
-  "windows": ["main"],
-  "permissions": ["core:default", "core:window:allow-set-icon", "core:window:allow-set-title"]
+  "description": "Permissions for the editor and the presenter view",
+  "windows": [
+    "main",
+    "presenter"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-set-icon",
+    "core:window:allow-set-title",
+    "core:window:allow-set-focus",
+    "core:webview:allow-create-webview-window"
+  ]
 }
