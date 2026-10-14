@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slides Studio</title>
+<style>
+:root,[data-theme="dark"]{
+  --font-ui:"Segoe UI",system-ui,-apple-system,sans-serif;
+  --bg:#1b1b1b;--chrome:#2b2b2b;--chrome2:#323232;--panel:#262626;--line:#111;--border:#3c3c3c;--hover:#3e3e3e;
+  --text:#e6e6e6;--muted:#9a9a9a;--accent:#378ef0;--accent-text:#fff;--stage:#141414;--tile-a:#ff7a45;--tile-b:#d9367a;
+  --sel:#378ef0;
+}
+[data-theme="light"]{
+  --bg:#ececec;--chrome:#f7f7f7;--chrome2:#ffffff;--panel:#f2f2f2;--line:#cfcfcf;--border:#d6d6d6;--hover:#e6e6e6;
+  --text:#222;--muted:#6a6a6a;--accent:#1473e6;--accent-text:#fff;--stage:#dcdcdc;--tile-a:#ff7a45;--tile-b:#d9367a;
+  --sel:#1473e6;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{display:grid;grid-template-rows:auto auto 1fr auto;background:var(--bg);color:var(--text);font:13px var(--font-ui);overflow:hidden;user-select:none;-webkit-user-select:none}
+button,select,input{font:inherit;color:inherit}
+button{background:none;border:0;border-radius:6px;padding:5px 9px;cursor:pointer;color:var(--text)}
+button:hover{background:var(--hover)}
+button.on{background:var(--accent);color:var(--accent-text)}
+button:disabled{opacity:.4;cursor:default;background:none}
+button.primary{background:var(--accent);color:var(--accent-text);font-weight:600}
+select,input[type=number],input[type=text]{background:var(--chrome2);border:1px solid var(--border);border-radius:6px;padding:4px 6px;user-select:text}
+input[type=color]{width:28px;height:26px;padding:0;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer}
+.sep{width:1px;align-self:stretch;background:var(--border);margin:2px 4px}
+.grow{flex:1}
+
+/* Menu bar */
+.menubar{display:flex;align-items:center;gap:2px;background:var(--chrome);border-bottom:1px solid var(--line);padding:3px 8px;height:38px}
+.logo{display:flex;align-items:center;margin-right:8px}
+.logo span{display:grid;place-items:center;width:26px;height:26px;border-radius:7px;font-weight:700;font-size:12px;color:#fff;background:linear-gradient(135deg,var(--tile-a),var(--tile-b))}
+.menu{position:relative}
+.menu>button{padding:5px 10px}
+.menu .drop{display:none;position:absolute;top:100%;left:0;min-width:240px;background:var(--chrome2);border:1px solid var(--border);border-radius:8px;padding:5px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:200}
+.menu.open .drop{display:block}
+.menu .drop button{display:flex;width:100%;justify-content:space-between;gap:24px;text-align:left;border-radius:5px}
+.menu .drop .k{color:var(--muted);font-size:11.5px}
+.menu .drop hr{border:0;border-top:1px solid var(--border);margin:4px 2px}
+.doc-title{margin-left:12px;color:var(--muted);max-width:30vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-title b{color:var(--text);font-weight:600}
+
+/* Options bar (what is selected) */
+.optbar{display:flex;align-items:center;gap:4px;background:var(--chrome2);border-bottom:1px solid var(--line);padding:4px 10px;min-height:42px;flex-wrap:wrap}
+.optbar .grp{display:flex;align-items:center;gap:3px}
+.optbar label{color:var(--muted);font-size:11.5px;margin:0 2px 0 6px}
+.optbar input[type=number]{width:58px}
+.optbar .hint{color:var(--muted)}
+.optbar .swatch{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);padding:0}
+
+/* Main area */
+.main{display:flex;min-height:0}
+.tools{flex:none;display:flex;flex-direction:column;gap:2px;background:var(--chrome);border-right:1px solid var(--line);padding:6px 4px;width:68px}
+.tools button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;font-size:11px;border-radius:8px}
+.tools button svg{width:22px;height:22px}
+.flyout{flex:none;width:280px;background:var(--panel);border-right:1px solid var(--line);overflow:auto;padding:12px;display:none}
+.flyout.open{display:block}
+.flyout h3{margin:0 0 10px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.flyout .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.flyout .card{border:1px solid var(--border);border-radius:8px;background:var(--chrome2);padding:6px;cursor:pointer;text-align:center;font-size:11.5px}
+.flyout .card:hover{border-color:var(--accent)}
+.flyout .card .pv{aspect-ratio:16/9;border-radius:4px;overflow:hidden;position:relative;margin-bottom:5px}
+.flyout .big{width:100%;margin-bottom:8px;padding:9px}
+.flyout .shapes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.flyout .shapes button{aspect-ratio:1;border:1px solid var(--border);background:var(--chrome2);padding:6px}
+.flyout .shapes svg{width:100%;height:100%}
+.flyout .row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.flyout .tbtn{width:100%;text-align:left;border:1px solid var(--border);background:var(--chrome2);margin-bottom:6px;padding:10px}
+.flyout .drop-hint{border:2px dashed var(--border);border-radius:8px;padding:16px;text-align:center;color:var(--muted);margin-top:8px}
+.flyout textarea{width:100%;min-height:200px;background:var(--chrome2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px;font:13px var(--font-ui);user-select:text;resize:vertical}
+
+.work{flex:1;display:grid;grid-template-rows:minmax(0,1fr) auto;min-width:0;min-height:0}
+.stagewrap{background:var(--stage);position:relative;overflow:hidden;min-height:0}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;box-shadow:0 8px 40px rgba(0,0,0,.45);overflow:hidden}
+#overlay{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;pointer-events:none}
+.slide-bg{position:absolute;inset:0}
+.el{position:absolute;transform-origin:50% 50%}
+.el.text{white-space:pre-wrap;overflow-wrap:break-word;line-height:1.2;cursor:default}
+.el.editing{outline:2px solid var(--sel);cursor:text;user-select:text;-webkit-user-select:text}
+.el svg{width:100%;height:100%;display:block;overflow:visible}
+.el.image{background-size:contain;background-repeat:no-repeat;background-position:center}
+.sel{position:absolute;outline:2px solid var(--sel);pointer-events:none;transform-origin:50% 50%}
+.sel.hover{outline:1px solid var(--sel);opacity:.6}
+.handle{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;background:#fff;border:2px solid var(--sel);border-radius:50%;pointer-events:auto;touch-action:none}
+.handle.edge-h{border-radius:6px;width:14px;height:34px;margin:-17px 0 0 -7px}
+.handle.edge-v{border-radius:6px;width:34px;height:14px;margin:-7px 0 0 -17px}
+.handle.rot{border-radius:50%;background:var(--sel);cursor:grab}
+.guide{position:absolute;background:#ff3d9a;pointer-events:none}
+.guide.v{width:2px;top:0;bottom:0}
+.guide.h{height:2px;left:0;right:0}
+
+/* Filmstrip */
+.filmstrip{display:flex;gap:10px;align-items:center;background:var(--chrome);border-top:1px solid var(--line);padding:10px 12px;overflow-x:auto;min-height:118px}
+.thumb{flex:none;width:150px;position:relative;cursor:pointer;border-radius:6px;border:2px solid transparent;padding:2px}
+.thumb.cur{border-color:var(--accent)}
+.thumb .pv{width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;border-radius:3px;background:#fff;pointer-events:none}
+.thumb .n{position:absolute;left:6px;top:4px;font-size:10.5px;color:#fff;background:rgba(0,0,0,.55);border-radius:4px;padding:0 5px}
+.thumb.dragover{outline:2px dashed var(--accent)}
+.addslide{flex:none;width:44px;height:84px;border:1px dashed var(--border);font-size:22px;color:var(--muted)}
+
+.status{display:flex;align-items:center;gap:14px;background:var(--chrome);border-top:1px solid var(--line);padding:3px 12px;color:var(--muted);font-size:11.5px;height:24px}
+.toast{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);background:var(--chrome2);border:1px solid var(--border);padding:8px 14px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:500;display:none}
+.toast.show{display:block}
+
+/* Present mode */
+#present{position:fixed;inset:0;background:#000;z-index:1000;display:none;overflow:hidden;user-select:none}
+#present.on{display:block}
+#present .pslide{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden}
+#present .pbar{position:absolute;left:0;bottom:0;height:4px;background:var(--accent);transition:width .2s}
+#present .pnum{position:absolute;right:14px;bottom:10px;color:#fff;opacity:.5;font:13px var(--font-ui)}
+#present .pctl{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:6px;opacity:0;transition:opacity .2s;background:rgba(0,0,0,.6);border-radius:10px;padding:4px}
+#present:hover .pctl{opacity:1}
+#present .pctl button{color:#fff}
+#present.blank .pslide{visibility:hidden}
+@keyframes t-fade{from{opacity:0}to{opacity:1}}
+@keyframes t-slide{from{transform:translateX(var(--w)) scale(var(--s))}to{transform:translateX(0) scale(var(--s))}}
+@keyframes t-zoom{from{opacity:0;transform:scale(calc(var(--s)*.85))}to{opacity:1;transform:scale(var(--s))}}
+
+/* Print: one slide per page */
+#printroot{display:none}
+@media print{
+  @page{size:1920px 1080px;margin:0}
+  html,body{height:auto;overflow:visible;background:#fff;display:block}
+  body>*:not(#printroot){display:none!important}
+  #printroot{display:block}
+  #printroot .pslide{position:relative;width:1920px;height:1080px;overflow:hidden;page-break-after:always;break-after:page}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<header class="menubar">
+  <div class="logo"><span>Sl</span></div>
+  <div class="menu" data-menu="file"><button data-i="menu.file">File</button><div class="drop"></div></div>
+  <div class="menu" data-menu="edit"><button data-i="menu.edit">Edit</button><div class="drop"></div></div>
+  <div class="menu" data-menu="slide"><button data-i="menu.slide">Slide</button><div class="drop"></div></div>
+  <div class="menu" data-menu="view"><button data-i="menu.view">View</button><div class="drop"></div></div>
+  <div class="menu" data-menu="settings"><button data-i="menu.settings">Settings</button><div class="drop"></div></div>
+  <div class="doc-title" id="docTitle"></div>
+  <div class="grow"></div>
+  <button id="btnUndo" title="Ctrl+Z">↶</button>
+  <button id="btnRedo" title="Ctrl+Y">↷</button>
+  <div class="sep"></div>
+  <button class="primary" id="btnPresent" data-i="a.present">Present</button>
+</header>
+<div class="optbar" id="optbar"></div>
+<div class="main">
+  <aside class="tools" id="tools"></aside>
+  <aside class="flyout" id="flyout"></aside>
+  <div class="work">
+    <div class="stagewrap" id="stagewrap">
+      <div id="stage"></div>
+      <div id="overlay"></div>
+    </div>
+    <div class="filmstrip" id="filmstrip"></div>
+  </div>
+</div>
+<footer class="status">
+  <span id="stSlide"></span><span id="stSel"></span><span class="grow"></span><span id="stSaved"></span>
+</footer>
+<div class="toast" id="toast"></div>
+<div id="present"><div class="pslide" id="pslide"></div><div class="pbar" id="pbar"></div><div class="pnum" id="pnum"></div>
+  <div class="pctl"><button id="pPrev">←</button><button id="pNext">→</button><button id="pBlank">B</button><button id="pExit">✕</button></div></div>
+<div id="printroot"></div>
+<input type="file" id="fileImg" accept="image/*" multiple hidden>
+<input type="file" id="fileDoc" accept=".slides,.json,application/json" hidden>
+<script src="native.js"></script>
+<script src="autohide.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
