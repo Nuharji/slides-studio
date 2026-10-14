@@ -51,6 +51,13 @@ fn load(path: &Path) -> Result<Doc, String> {
     })
 }
 
+/// The app's texts in English and German (i18n/*.json, built into the program).
+#[tauri::command]
+fn texts() -> serde_json::Value {
+    let parse = |s: &str| serde_json::from_str::<serde_json::Value>(s).unwrap_or_default();
+    serde_json::json!({"en": parse(include_str!("../i18n/en.json")), "de": parse(include_str!("../i18n/de.json"))})
+}
+
 #[tauri::command]
 async fn open_files(app: AppHandle) -> Result<Vec<Doc>, String> {
     let picked = app
@@ -236,7 +243,8 @@ fn main() {
             confirm,
             open_url,
             print_page,
-            initial_files
+            initial_files,
+            texts
         ])
         .build(tauri::generate_context!())
         .expect("error while building Slides Studio");
@@ -272,5 +280,13 @@ mod tests {
         let d = load(&p).unwrap();
         assert_eq!(d.name, "a.slides");
         assert_eq!(d.content, "{\"version\":1}");
+    }
+
+    #[test]
+    fn texts_parse_and_match() {
+        let t = texts();
+        let (en, de) = (t["en"].as_object().unwrap(), t["de"].as_object().unwrap());
+        assert!(en.len() > 100);
+        assert!(en.keys().all(|k| de.contains_key(k)), "every English text has a German one");
     }
 }

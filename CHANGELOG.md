@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0
+- Same look and controls as the other Studio apps: menu bar with the app tile, option bar, tool rail, document tabs,
+  panels on the right (Layouts, Designs, Slide, Notes), status bar with zoom, start screen with recent files.
+- The four app themes (Dark, Light, GitHub, GitHub Dark), settings dialog (Ctrl+,) and customizable shortcuts (shortcuts.js).
+- Several presentations open at once in tabs; the session (open tabs, settings) is restored on start.
+- Texts in src-tauri/i18n/*.json, served by Rust like in the other apps.
+
 ## 0.2.0
 - Tables: insert from a hover grid, edit cells in place (Tab moves on), add/remove rows and columns, header color.
 - Export as PowerPoint (.pptx): text, shapes, pictures (fit/fill/stretch), tables, backgrounds incl. gradients,
