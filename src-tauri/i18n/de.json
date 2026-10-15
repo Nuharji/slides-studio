@@ -205,5 +205,8 @@
   "about.p2": "Präsentationen werden als .slides-Dateien (JSON) gespeichert. Export nach PowerPoint (.pptx), PDF und HTML ist eingebaut.",
   "a.bold": "Fett",
   "a.italic": "Kursiv",
-  "a.underline": "Unterstrichen"
+  "a.underline": "Unterstrichen",
+  "a.txLeft": "Text linksbündig",
+  "a.txCenter": "Text zentrieren",
+  "a.txRight": "Text rechtsbündig"
 }

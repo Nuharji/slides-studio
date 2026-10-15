@@ -205,5 +205,8 @@
   "about.p2": "Presentations are saved as .slides files (JSON). Export to PowerPoint (.pptx), PDF and HTML is built in.",
   "a.bold": "Bold",
   "a.italic": "Italic",
-  "a.underline": "Underline"
+  "a.underline": "Underline",
+  "a.txLeft": "Align Text Left",
+  "a.txCenter": "Center Text",
+  "a.txRight": "Align Text Right"
 }

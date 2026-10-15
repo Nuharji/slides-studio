@@ -529,7 +529,13 @@ function setProp(key, val) {
   for (const e of els) e[key] = val;
   commit(); renderStage(); renderThumbs();
 }
-function toggleText(key) { const e = selEls().find(x => x.type === 'text'); if (e) setProp(key, !e[key]); }
+function toggleText(key) { const e = selEls().find(x => x.type === 'text'); if (e) setTextProp(key, !e[key]); }
+/* Formatting from the tool rail applies to the selected text boxes only. */
+function setTextProp(key, val) {
+  const els = selEls().filter(e => e.type === 'text'); if (!els.length) return;
+  for (const e of els) e[key] = val;
+  commit(); renderStage(); renderThumbs();
+}
 /* Slides */
 function go(i) { if (!doc) return; if (editing) finishEdit(); cur = clamp(i, 0, doc.slides.length - 1); sel = []; renderAll(); saveSession(); }
 function addSlide(kind = 'content', at = cur + 1) {
@@ -816,6 +822,7 @@ const A = {
   front: () => order('front'), forward: () => order('forward'), backward: () => order('backward'), back: () => order('back'),
   title: () => addText('title'), heading: () => addText('heading'), body: () => addText('body'),
   bold: () => toggleText('bold'), italic: () => toggleText('italic'), underline: () => toggleText('underline'),
+  txLeft: () => setTextProp('align', 'left'), txCenter: () => setTextProp('align', 'center'), txRight: () => setTextProp('align', 'right'),
   rect: () => addShape('rect'), round: () => addShape('round'), ellipse: () => addShape('ellipse'), triangle: () => addShape('triangle'),
   diamond: () => addShape('diamond'), star: () => addShape('star'), arrow: () => addShape('arrow'), line: () => addShape('line'),
   image: () => pickImage(r => addEl(imageEl(r.src, r.w, r.h))), table: () => addTable(),
@@ -857,7 +864,7 @@ const MENUS = [
     ['duplicate', 'Ctrl+D'], ['delete', 'Delete', null, true], ['selectAll', 'Ctrl+A'], '-',
     ['front', 'Ctrl+Shift+]'], ['forward', 'Ctrl+]'], ['backward', 'Ctrl+['], ['back', 'Ctrl+Shift+[']]],
   ['insert', [['title', 'Ctrl+Shift+1'], ['heading', 'Ctrl+Shift+2'], ['body', 'Ctrl+Shift+3'], '-',
-    ['bold', 'Ctrl+B'], ['italic', 'Ctrl+I'], ['underline', 'Ctrl+U'], '-',
+    ['bold', 'Ctrl+B'], ['italic', 'Ctrl+I'], ['underline', 'Ctrl+U'], ['txLeft'], ['txCenter'], ['txRight'], '-',
     ...SHAPES.map(s => [s]), '-', ['image', 'Ctrl+Shift+G'], ['table', 'Ctrl+Shift+L']]],
   ['slide', [['newSlide', 'Ctrl+M'], ['dupSlide', 'Ctrl+Shift+D'], ['delSlide'], '-', ['slideUp', 'Ctrl+Shift+ArrowLeft'], ['slideDown', 'Ctrl+Shift+ArrowRight'], '-',
     ['present', 'F5'], ['presentCurrent', 'Shift+F5'], ['presenter', 'Alt+F5']]],
@@ -874,8 +881,9 @@ const keyLabel = k => fmtKey(k.replace('ArrowLeft', '←').replace('ArrowRight',
 /* Actions that work with no presentation open (start screen), and those that need a selection. */
 const NO_DOC = new Set(['newDoc', 'openFile', 'togglePanels', 'toggleAutoHide', 'toggleSnap', 'settings', 'langAuto', 'langEn', 'langDe',
   'themeDark', 'themeLight', 'themeGithub', 'themeGithubDark', 'shortcuts', 'about']);
-const NEEDS_SEL = new Set(['cut', 'copy', 'duplicate', 'delete', 'front', 'forward', 'backward', 'back', 'bold', 'italic', 'underline']);
-const allowed = act => NO_DOC.has(act) || (!!doc && (!NEEDS_SEL.has(act) || sel.length > 0) &&
+const NEEDS_SEL = new Set(['cut', 'copy', 'duplicate', 'delete', 'front', 'forward', 'backward', 'back']);
+const NEEDS_TEXT = new Set(['bold', 'italic', 'underline', 'txLeft', 'txCenter', 'txRight']);
+const allowed = act => NO_DOC.has(act) || (!!doc && (!NEEDS_SEL.has(act) || sel.length > 0) && (!NEEDS_TEXT.has(act) || selEls().some(e => e.type === 'text')) &&
   (act !== 'undo' || hist.i > 0) && (act !== 'redo' || hist.i < hist.stack.length - 1));
 function run(act) { if (A[act] && allowed(act)) A[act](); }
 function syncDisabled() { $$('[data-act]').forEach(b => b.disabled = !allowed(b.dataset.act)); }
@@ -948,7 +956,10 @@ function makeBtn(act, html, title) {
   const b = el('button', {className: 'ibtn', innerHTML: html, title: title || tip(act)});
   b.dataset.act = act; return b;
 }
-const RAIL = [['title', '<b class="g" style="font-size:17px">T</b>'], ['heading', '<b class="g">H</b>'], ['body', '<span class="g" style="font-size:13px">Aa</span>'], '-',
+// Formatting sits at the top of the tool rail like in Markdown and Data Studio; inserting follows below.
+const RAIL = [['bold', '<b class="g" style="font-weight:800">B</b>'], ['italic', '<i class="g serif" style="font-size:17px">I</i>'], ['underline', '<u class="g">U</u>'], '-',
+  ['txLeft', ICONS.txLeft], ['txCenter', ICONS.txCenter], ['txRight', ICONS.txRight], '-',
+  ['title', '<b class="g" style="font-size:17px">T</b>'], ['heading', '<b class="g">H</b>'], ['body', '<span class="g" style="font-size:13px">Aa</span>'], '-',
   ...SHAPES.map(s => [s, ICONS[s]]), '-', ['image', ICONS.image], ['table', ICONS.table]];
 function buildToolbars() {
   const fill = (id, list) => { const box = $(id); box.innerHTML = ''; list.forEach(([a, i]) => box.append(makeBtn(a, i))); };
@@ -984,7 +995,14 @@ function swatches(value, fn, opts = {}) {
   if (opts.none) out.push(ib('&#8856;', t('ui.none'), () => fn(null), value == null));
   return out;
 }
+function syncRail() {
+  const e = selEls().find(x => x.type === 'text');
+  const on = {bold: e && e.bold, italic: e && e.italic, underline: e && e.underline,
+    txLeft: e && (e.align || 'left') === 'left', txCenter: e && e.align === 'center', txRight: e && e.align === 'right'};
+  $$('#tools .ibtn').forEach(b => { if (b.dataset.act in on) b.classList.toggle('active', !!on[b.dataset.act]); });
+}
 function renderOptbar() {
+  syncRail();
   const bar = $('#ctxBar'); bar.replaceChildren();
   if (!doc) return;
   const els = selEls();
@@ -995,9 +1013,6 @@ function renderOptbar() {
     for (const [n, v] of FONTS) fs.append(el('option', {value: v, textContent: n.startsWith('font.') ? t(n) : n, selected: e.font === v}));
     fs.onchange = () => setProp('font', fs.value);
     bar.append(grp(fs, numIn(e.size, 8, 400, v => setProp('size', v))),
-      grp(ib('<b class="g">B</b>', tip('bold'), () => toggleText('bold'), e.bold), ib('<i class="g serif">I</i>', tip('italic'), () => toggleText('italic'), e.italic),
-        ib('<u class="g">U</u>', tip('underline'), () => toggleText('underline'), e.underline)),
-      grp(...['left', 'center', 'right'].map(a => ib(ICONS['tx' + a[0].toUpperCase() + a.slice(1)], t('tx.' + a), () => setProp('align', a), (e.align || 'left') === a))),
       grp(lbl(t('ui.color')), ...swatches(e.color, v => setProp('color', v))));
   } else if (e.type === 'shape') {
     bar.append(grp(lbl(t('ui.fill')), ...swatches(e.fill, v => setProp('fill', v))));

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.2
+- Bold, italic, underline and text alignment moved into the tool rail on the left (like Markdown and Data Studio); they show the selected text's state. The option bar keeps font, size and color.
+
 ## 0.3.1
 - Shared with all Studio apps (shared.rs / shared.js): theme and language follow the other apps and Studio Hub (also when you switch windows), and file dialogs open in the work folder chosen in Studio Hub.
 
