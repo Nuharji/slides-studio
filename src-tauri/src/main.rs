@@ -1,6 +1,8 @@
 // Hide the console window in release builds on Windows.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod shared;
+
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
@@ -60,9 +62,7 @@ fn texts() -> serde_json::Value {
 
 #[tauri::command]
 async fn open_files(app: AppHandle) -> Result<Vec<Doc>, String> {
-    let picked = app
-        .dialog()
-        .file()
+    let picked = crate::shared::file_dialog(&app)
         .set_title("Open presentation")
         .add_filter("Slides Studio", DOC_EXT)
         .blocking_pick_files();
@@ -88,9 +88,7 @@ async fn save_file(
 ) -> Result<Option<Saved>, String> {
     let target = match path {
         Some(p) => PathBuf::from(p),
-        None => match app
-            .dialog()
-            .file()
+        None => match crate::shared::file_dialog(&app)
             .set_title("Save presentation")
             .set_file_name(&suggested_name)
             .add_filter("Slides Studio", &["slides"])
@@ -117,9 +115,7 @@ async fn save_bytes(
     bytes: Vec<u8>,
 ) -> Result<Option<String>, String> {
     let exts: Vec<&str> = extensions.iter().map(String::as_str).collect();
-    let Some(f) = app
-        .dialog()
-        .file()
+    let Some(f) = crate::shared::file_dialog(&app)
         .set_file_name(&suggested_name)
         .add_filter(&filter_name, &exts)
         .blocking_save_file()
@@ -233,6 +229,8 @@ fn main() {
         })
         .manage(Mutex::new(Pending { ready: false, paths: args }))
         .invoke_handler(tauri::generate_handler![
+            shared::shared_get,
+            shared::shared_set,
             context_menu,
             clipboard_read,
             clipboard_write,

@@ -1158,6 +1158,7 @@ let appliedKeys = null;
 function applySettings() {
   if (window.AutoHide) AutoHide.set(settings.autoHide);
   if (!THEMES.includes(settings.theme)) settings.theme = 'dark';
+  if (window.Shared) Shared.push({theme: settings.theme, lang: settings.lang});
   document.documentElement.dataset.theme = settings.theme;
   if (JSON.stringify(settings.keys || {}) !== appliedKeys) {
     appliedKeys = JSON.stringify(settings.keys || {});
@@ -1252,6 +1253,12 @@ window.__sl = {get doc() { return doc; }, get sel() { return sel; }, get cur() {
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(STORE)); } catch (e) {}
   if (saved && saved.settings) settings = {...DEF, ...saved.settings};
+  // Theme and language shared by all Studio apps (shared.js); the shared values win over this app's own.
+  if (window.Shared) await Shared.init({apply: sh => {
+    if (sh.theme) settings.theme = sh.theme;
+    if (sh.lang) settings.lang = sh.lang;
+    if (booted) applySettings();
+  }});
   lang = effectiveLang();
   document.documentElement.dataset.theme = THEMES.includes(settings.theme) ? settings.theme : 'dark';
   if (IS_PRESENTER) { document.documentElement.lang = lang; if (chan) runPresenter(); return; }

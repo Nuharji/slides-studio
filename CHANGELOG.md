@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.1
+- Shared with all Studio apps (shared.rs / shared.js): theme and language follow the other apps and Studio Hub (also when you switch windows), and file dialogs open in the work folder chosen in Studio Hub.
+
 ## 0.3.0
 - Same look and controls as the other Studio apps: menu bar with the app tile, option bar, tool rail, document tabs,
   panels on the right (Layouts, Designs, Slide, Notes), status bar with zoom, start screen with recent files.
