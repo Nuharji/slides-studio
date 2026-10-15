@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.3.2
+- The window and taskbar icon is now the app icon (the same picture as the installed app).
 - Bold, italic, underline and text alignment moved into the tool rail on the left (like Markdown and Data Studio); they show the selected text's state. The option bar keeps font, size and color.
 
 ## 0.3.1
