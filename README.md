@@ -1,5 +1,7 @@
 # Slides Studio (Rust / Tauri)
 
+> **Status: Pre-Alpha** — early version (0.x): it works, but things may still change or break. Version 1.0 will be the first stable one.
+
 Presentation editor of the Studio family — made for students and teachers: drag-and-drop layouts like Canva,
 works offline, no account. The native shell is Rust ([Tauri 2](https://tauri.app)); the UI is plain HTML/JS in `ui/`.
 
