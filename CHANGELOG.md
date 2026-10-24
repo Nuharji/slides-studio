@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0 — 2026-10-24
+- New: Send to Agent Studio (File menu, Ctrl+Shift+A): the deck with a task for Claude — Slides from an outline (a new
+  .slides file in the deck's design), Write speaker notes (a copy with notes), Feedback, or your own task. A new deck
+  opens here from the card at the bottom right. An unsaved deck goes as its content. Needs Agent Studio 0.8 or later.
+
 ## 0.3.3 — 2026-10-24
 - New app icon: the tile now fades from dark at the top left to lighter at the bottom right, like the other Studio apps.
 

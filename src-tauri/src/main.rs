@@ -1,6 +1,7 @@
 // Hide the console window in release builds on Windows.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod agentlink;
 mod shared;
 
 use serde::{Deserialize, Serialize};
@@ -231,6 +232,11 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             shared::shared_get,
             shared::shared_set,
+            agentlink::agent_send,
+            agentlink::agent_poll,
+            agentlink::agent_ack,
+            agentlink::agent_open,
+            agentlink::agent_open_file,
             context_menu,
             clipboard_read,
             clipboard_write,

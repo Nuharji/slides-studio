@@ -208,5 +208,12 @@
   "a.underline": "Unterstrichen",
   "a.txLeft": "Text linksbündig",
   "a.txCenter": "Text zentrieren",
-  "a.txRight": "Text rechtsbündig"
+  "a.txRight": "Text rechtsbündig",
+  "a.sendToAgent": "An Agent Studio senden…",
+  "agent.outline": "Folien aus einer Gliederung",
+  "agent.outlineTask": "Mach aus dieser Gliederung Folien als neue Slides-Studio-Datei „{name} – neu.slides“ (JSON wie das mitgeschickte Deck: {\"version\":1,\"theme\":…,\"slides\":[{\"id\",\"bg\",\"els\":[…],\"trans\",\"notes\"}]}, Fläche 1920×1080 — nimm die Elemente und das Design des Decks als Vorbild). Eine Folie pro Punkt, kurze Stichpunkte, Sprechernotizen in „notes“.\n\nGliederung:\n",
+  "agent.notes": "Sprechernotizen schreiben",
+  "agent.notesTask": "Schreibe für jede Folie Sprechernotizen (was man sagt, 3–5 Sätze) und speichere das Deck damit als neue Datei „{name} – mit Notizen.slides“ (dasselbe JSON, nur die „notes“ der Folien ausgefüllt).",
+  "agent.feedback": "Feedback geben",
+  "agent.feedbackTask": "Gib Feedback zur Präsentation: Aufbau, zu viel Text, Verständlichkeit, Rechtschreibung — Folie für Folie, mit konkreten Vorschlägen."
 }

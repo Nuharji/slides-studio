@@ -1,6 +1,6 @@
 [package]
 name = "slides-studio"
-version = "0.3.3"
+version = "0.4.0"
 description = "Presentation editor: drag-and-drop slides, templates, present mode, PDF export"
 edition = "2021"
 rust-version = "1.77"

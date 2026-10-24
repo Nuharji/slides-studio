@@ -814,6 +814,18 @@ function runPresenter() {
 /* ================= Actions, menus, shortcuts ================= */
 function setZoom(z) { settings.zoom = clamp(Math.round(z / 10) * 10, 30, 300); fit(); saveSession(); }
 const A = {
+  /* "Send to Agent Studio" (agentlink.js): the deck with a task for Claude — slides from an outline, speaker notes,
+     feedback; a new .slides file it makes opens here from the card in the corner. An unsaved deck goes as its JSON. */
+  sendToAgent: () => {
+    const d = D(); if (!d || !window.AgentLink) return;
+    if (editing) finishEdit();
+    storeCurrent();
+    const json = !d.path || d.dirty ? JSON.stringify(d.deck) : '', stem = d.name.replace(/\.slides$/i, '');
+    AgentLink.send({title: d.name, files: d.path ? [d.path] : [], content: json.length < 400000 ? json : '', presets: [
+      {label: t('agent.outline'), task: t('agent.outlineTask', {name: stem}), level: 'edit'},
+      {label: t('agent.notes'), task: t('agent.notesTask', {name: stem}), level: 'edit'},
+      {label: t('agent.feedback'), task: t('agent.feedbackTask'), level: 'read'}]});
+  },
   newDoc: () => openDoc(null, newDeck()),
   openFile, save: () => save(false), saveAs: () => save(true), exportPdf, exportPptx, exportHtml,
   closeTab: () => closeTab(active),
@@ -859,7 +871,7 @@ const A = {
 // Menu items: [action, shortcut, checked(), fixed, extraKeys]; '-' is a separator, '#key' a section label (as in every Studio app).
 const MENUS = [
   ['file', [['newDoc', 'Alt+N'], ['openFile', 'Ctrl+O'], '-', ['save', 'Ctrl+S'], ['saveAs', 'Ctrl+Shift+S'], '-',
-    ['exportPptx', 'Ctrl+E'], ['exportPdf', 'Ctrl+P'], ['exportHtml'], '-', ['closeTab', 'Alt+W']]],
+    ['exportPptx', 'Ctrl+E'], ['exportPdf', 'Ctrl+P'], ['exportHtml'], '-', ['sendToAgent', 'Ctrl+Shift+A'], '-', ['closeTab', 'Alt+W']]],
   ['edit', [['undo', 'Ctrl+Z', null, false, ['Ctrl+Shift+Z']], ['redo', 'Ctrl+Y'], '-', ['cut', 'Ctrl+X'], ['copy', 'Ctrl+C'], ['paste', 'Ctrl+V'],
     ['duplicate', 'Ctrl+D'], ['delete', 'Delete', null, true], ['selectAll', 'Ctrl+A'], '-',
     ['front', 'Ctrl+Shift+]'], ['forward', 'Ctrl+]'], ['backward', 'Ctrl+['], ['back', 'Ctrl+Shift+[']]],
@@ -1295,6 +1307,11 @@ window.__sl = {get doc() { return doc; }, get sel() { return sel; }, get cur() {
   booted = true;
   applySettings();
   loadActive();
+  // Results of tasks sent to Agent Studio: a .slides file opens here, other files with the program the system uses.
+  if (window.AgentLink) AgentLink.init({app: 'Slides Studio', lang: () => lang, open: async path => {
+    if (!/\.slides$/i.test(path)) return false;
+    openNative([await invoke('read_file', {path})]);
+  }});
   if (invoke) {
     // Files passed on the command line / via "Open with", and (macOS) files opened while running.
     invoke('initial_files').then(openNative).catch(e => toast(t('toast.openFail', {e})));

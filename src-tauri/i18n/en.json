@@ -208,5 +208,12 @@
   "a.underline": "Underline",
   "a.txLeft": "Align Text Left",
   "a.txCenter": "Center Text",
-  "a.txRight": "Align Text Right"
+  "a.txRight": "Align Text Right",
+  "a.sendToAgent": "Send to Agent Studio…",
+  "agent.outline": "Slides from an outline",
+  "agent.outlineTask": "Make slides from this outline as a new Slides Studio file “{name} – new.slides” (JSON like the deck sent: {\"version\":1,\"theme\":…,\"slides\":[{\"id\",\"bg\",\"els\":[…],\"trans\",\"notes\"}]}, canvas 1920×1080 — take the elements and the design of the deck as the example). One slide per point, short bullet points, speaker notes in “notes”.\n\nOutline:\n",
+  "agent.notes": "Write speaker notes",
+  "agent.notesTask": "Write speaker notes for every slide (what to say, 3–5 sentences) and save the deck with them as a new file “{name} – with notes.slides” (the same JSON, only the “notes” of the slides filled in).",
+  "agent.feedback": "Feedback",
+  "agent.feedbackTask": "Give feedback on the presentation: structure, too much text, clarity, spelling — slide by slide, with concrete suggestions."
 }
