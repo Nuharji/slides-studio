@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.3 — 2026-10-24
+- New app icon: the tile now fades from dark at the top left to lighter at the bottom right, like the other Studio apps.
+
 ## 0.3.2
 - The window and taskbar icon is now the app icon (the same picture as the installed app).
 - Bold, italic, underline and text alignment moved into the tool rail on the left (like Markdown and Data Studio); they show the selected text's state. The option bar keeps font, size and color.
