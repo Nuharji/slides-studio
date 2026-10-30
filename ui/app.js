@@ -1143,7 +1143,7 @@ function renderSettings() {
       <h3>${esc(t('set.layout'))}</h3>${sw('dock', t('set.panels'))}${sw('autoHide', t('set.autoHide'))}`,
     appearance: `<h3>${esc(t('set.theme'))}</h3><div class="theme-grid">` + THEMES.map(th =>
       `<button class="theme-card${settings.theme === th ? ' active' : ''}" data-theme-pick="${th}">${mock(th)}
-       <div class="theme-name">${esc(t('theme.' + th))}<span>${settings.theme === th ? '&#10003;' : ''}</span></div></button>`).join('') + '</div>',
+       <div class="theme-name">${esc(t('theme.' + th))}<span>${settings.theme === th ? '&#10003;' : ''}</span></div></button>`).join('') + '</div>' + (window.Shared ? Shared.layoutHeading() : ''),
     editor: `<h3>${esc(t('set.behavior'))}</h3>${sw('snap', t('set.snap'))}`,
     keys: '<div id="keysBox"></div>'
   };
