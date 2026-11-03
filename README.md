@@ -22,6 +22,32 @@ works offline, no account. The native shell is Rust ([Tauri 2](https://tauri.app
 
 Not yet: animations inside a slide, charts, speaker notes and transitions in the PPTX file, importing .pptx.
 
+## MCP
+Slides Studio is also an MCP server, so Claude (Desktop or Code), ChatGPT and other MCP clients can use what it can do:
+started with `--mcp`, the program opens no window and speaks MCP on stdin / stdout until the client closes it.
+
+- `deck_read` — Reads a presentation: for each slide its texts and speaker notes.
+- `deck_create` — Makes a new presentation from an outline: a title slide, then one slide per entry. Replaces an existing file only with overwrite.
+
+Only .slides files are written, an existing one only with `overwrite`. Files are given as full paths.
+
+Claude Code: `claude mcp add slides-studio -- "/Applications/Slides Studio.app/Contents/MacOS/slides-studio" --mcp`.
+Claude Desktop (`claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "slides-studio": {
+      "command": "/Applications/Slides Studio.app/Contents/MacOS/slides-studio",
+      "args": [
+        "--mcp"
+      ]
+    }
+  }
+}
+```
+The program is `/Applications/Slides Studio.app/Contents/MacOS/slides-studio` on macOS, `slides-studio.exe` in the install folder on
+Windows, and `slides-studio` (or the AppImage) on Linux.
+
 ## Layout
 ```
 ui/                 index.html, app.js (editor + presenter view), pptx.js (PowerPoint writer),

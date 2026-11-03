@@ -2,6 +2,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod agentlink;
+mod mcp;
+mod mcp_tools;
 mod shared;
 
 use serde::{Deserialize, Serialize};
@@ -215,6 +217,7 @@ fn clipboard_write(app: AppHandle, text: String) -> Result<(), String> {
 }
 
 fn main() {
+    if mcp::wanted() { return mcp_tools::run(); }
     let args: Vec<PathBuf> = std::env::args_os()
         .skip(1)
         .map(PathBuf::from)
