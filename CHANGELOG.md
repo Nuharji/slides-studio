@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.6.1 — 2026-11-03
+- Fix (macOS): the app no longer asks again and again for access to your Documents folder (or Desktop, Downloads). The app is now signed as a whole, so macOS can remember your answer. After an update, macOS may ask once more.
+
 ## 0.6.0 — 2026-11-03
 - New: MCP server. Started with `--mcp`, Slides Studio opens no window and lets Claude, ChatGPT and other MCP clients use it: `deck_read`, `deck_create`. Only .slides files are written, an existing one only with `overwrite`. Setup: see README → MCP.
 
