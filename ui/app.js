@@ -93,7 +93,7 @@ const fontOf = (f, th) => f && f.startsWith('t:') ? th[f.slice(2)] : (f || th.bo
 const bgCss = (b, th) => b && typeof b === 'object' ? `linear-gradient(${b.a ?? 135}deg,${color(b.c1, th)},${color(b.c2, th)})` : color(b, th);
 
 /* ================= Settings, documents, session ================= */
-const THEMES = ['dark', 'light', 'github', 'github-dark', 'cli'];
+const THEMES = ['dark', 'light', 'github', 'github-dark', 'cli', 'midnight', 'dusk', 'graphite', 'contrast', 'sand', 'rose'];
 const DEF = {keys: {}, autoHide: false, lang: 'auto', theme: 'dark', dock: true, dockTab: 'layouts', snap: true, zoom: 100};
 let settings = {...DEF}, docs = [], active = -1, untitledN = 1, recent = [], booted = false, saveT;
 /* The open document's working state; storeCurrent() writes it back to docs[active]. */
@@ -846,7 +846,7 @@ const A = {
   zoomIn: () => setZoom(settings.zoom + 10), zoomOut: () => setZoom(settings.zoom - 10), zoomReset: () => setZoom(100),
   settings: () => openSettings(),
   langAuto: () => setLang('auto'), langEn: () => setLang('en'), langDe: () => setLang('de'),
-  themeDark: () => setTheme('dark'), themeLight: () => setTheme('light'), themeGithub: () => setTheme('github'), themeGithubDark: () => setTheme('github-dark'), themeCli: () => setTheme('cli'),
+  themeDark: () => setTheme('dark'), themeLight: () => setTheme('light'), themeGithub: () => setTheme('github'), themeGithubDark: () => setTheme('github-dark'), themeCli: () => setTheme('cli'), themeMidnight: () => setTheme('midnight'), themeDusk: () => setTheme('dusk'), themeGraphite: () => setTheme('graphite'), themeContrast: () => setTheme('contrast'), themeSand: () => setTheme('sand'), themeRose: () => setTheme('rose'),
   shortcuts: () => {
     let h = '';
     MENUS.forEach(([m, items]) => {
@@ -886,13 +886,13 @@ const MENUS = [
     ['langAuto', null, () => settings.lang === 'auto'], ['langEn', null, () => settings.lang === 'en'], ['langDe', null, () => settings.lang === 'de'],
     '-', '#menu.theme',
     ['themeDark', null, () => settings.theme === 'dark'], ['themeLight', null, () => settings.theme === 'light'],
-    ['themeGithub', null, () => settings.theme === 'github'], ['themeGithubDark', null, () => settings.theme === 'github-dark'], ['themeCli', null, () => settings.theme === 'cli']]],
+    ['themeGithub', null, () => settings.theme === 'github'], ['themeGithubDark', null, () => settings.theme === 'github-dark'], ['themeCli', null, () => settings.theme === 'cli'], ['themeMidnight', null, () => settings.theme === 'midnight'], ['themeDusk', null, () => settings.theme === 'dusk'], ['themeGraphite', null, () => settings.theme === 'graphite'], ['themeContrast', null, () => settings.theme === 'contrast'], ['themeSand', null, () => settings.theme === 'sand'], ['themeRose', null, () => settings.theme === 'rose']]],
   ['help', [['shortcuts', 'F1'], '-', ['about']]]
 ];
 const keyLabel = k => fmtKey(k.replace('ArrowLeft', '←').replace('ArrowRight', '→'));
 /* Actions that work with no presentation open (start screen), and those that need a selection. */
 const NO_DOC = new Set(['newDoc', 'openFile', 'togglePanels', 'toggleAutoHide', 'toggleSnap', 'settings', 'langAuto', 'langEn', 'langDe',
-  'themeDark', 'themeLight', 'themeGithub', 'themeGithubDark', 'themeCli', 'shortcuts', 'about']);
+  'themeDark', 'themeLight', 'themeGithub', 'themeGithubDark', 'themeCli', 'themeMidnight', 'themeDusk', 'themeGraphite', 'themeContrast', 'themeSand', 'themeRose', 'shortcuts', 'about']);
 const NEEDS_SEL = new Set(['cut', 'copy', 'duplicate', 'delete', 'front', 'forward', 'backward', 'back']);
 const NEEDS_TEXT = new Set(['bold', 'italic', 'underline', 'txLeft', 'txCenter', 'txRight']);
 const allowed = act => NO_DOC.has(act) || (!!doc && (!NEEDS_SEL.has(act) || sel.length > 0) && (!NEEDS_TEXT.has(act) || selEls().some(e => e.type === 'text')) &&
